@@ -2,10 +2,29 @@ TEST?=$$(go list ./... |grep -v 'vendor')
 GOFMT_FILES?=$$(find . -name '*.go' |grep -v vendor)
 WEBSITE_REPO=github.com/hashicorp/terraform-website
 PKG_NAME=null
+BUILD_OUTPUT=./build
+DIST_OUTPUT=./dist
 
-default: build
+PROVIDER_NAME=terraform-provider-secret
+PROVIDER_VERSION?=v1.1.0
+PROVIDER_FILE_NAME="$(PROVIDER_NAME)_$(PROVIDER_VERSION)"
 
-build: fmtcheck
+default: install
+
+clean:
+	rm -rf $(BUILD_OUTPUT) $(DIST_OUTPUT)
+
+.PHONY:
+build: clean
+	PROVIDER_FILE_NAME="$(PROVIDER_NAME)_$(PROVIDER_VERSION)"
+	gox -os="linux darwin windows" -arch="amd64" -output="$(BUILD_OUTPUT)/$(PROVIDER_NAME)_$(PROVIDER_VERSION)_{{.OS}}_{{.Arch}}/$(PROVIDER_NAME)_$(PROVIDER_VERSION)"
+	chmod -R +x $(BUILD_OUTPUT)/*
+	mkdir -p $(DIST_OUTPUT)
+	for arch in $$(ls $(BUILD_OUTPUT)); do  \
+		tar czvf $(DIST_OUTPUT)/$$arch.tar.gz -C $(BUILD_OUTPUT)/$$arch . ; \
+	done
+
+install: fmtcheck
 	go install
 
 test: fmtcheck
@@ -59,5 +78,5 @@ ifeq (,$(wildcard $(GOPATH)/src/$(WEBSITE_REPO)))
 endif
 	@$(MAKE) -C $(GOPATH)/src/$(WEBSITE_REPO) website-provider-test PROVIDER_PATH=$(shell pwd) PROVIDER_NAME=$(PKG_NAME)
 
-.PHONY: build test testacc vet fmt fmtcheck errcheck vendor-status test-compile website website-test
+.PHONY: install test testacc vet fmt fmtcheck errcheck vendor-status test-compile website website-test
 

@@ -1,8 +1,8 @@
 package main
 
 import (
+	"github.com/SectorLabs/terraform-provider-secret/secret"
 	"github.com/hashicorp/terraform/plugin"
-	"github.com/tweag/terraform-provider-secret/secret"
 )
 
 func main() {

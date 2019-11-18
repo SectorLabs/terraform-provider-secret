@@ -1,0 +1,47 @@
+---
+version: 2
+jobs:
+    build:
+        docker:
+            - image: golang:1.12.6-alpine3.9
+        steps:
+            - checkout
+            - run:
+                  name: Install packages
+                  command: apk add make git
+            - run:
+                  name: Build binary
+                  command: export PROVIDER_VERSION="${CIRCLE_TAG:-unknown}" && go get -u github.com/mitchellh/gox && make build
+            - persist_to_workspace:
+                  root: ~/project
+                  paths:
+                      - dist/*
+    release:
+        docker:
+            - image: circleci/golang:1.9
+        steps:
+            - attach_workspace:
+                  at: ./
+            - run:
+                  name: "Publish Release on GitHub"
+                  command: |
+                    go get -u github.com/tcnksm/ghr
+                    ghr -t ${GITHUB_TOKEN} -u ${CIRCLE_PROJECT_USERNAME} -r ${CIRCLE_PROJECT_REPONAME} -c ${CIRCLE_SHA1} -delete ${CIRCLE_TAG} ./dist/
+
+workflows:
+    version: 2
+    main:
+        jobs:
+            - build:
+                  filters:
+                      tags:
+                          only: /v[0-9]+(\.[0-9]+)*(-.*)*/
+            - release:
+                  # Only run this job on git tag pushes
+                  requires:
+                      - build
+                  filters:
+                      branches:
+                          ignore: /.*/
+                      tags:
+                          only: /v[0-9]+(\.[0-9]+)*(-.*)*/
