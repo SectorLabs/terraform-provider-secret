@@ -2,18 +2,19 @@ TEST?=$$(go list ./... |grep -v 'vendor')
 GOFMT_FILES?=$$(find . -name '*.go' |grep -v vendor)
 WEBSITE_REPO=github.com/hashicorp/terraform-website
 PKG_NAME=null
+OUTPUT=./dist
 
 PROVIDER_NAME="terraform-provider-secret"
-PROVIDER_VERSION="1.1.0"
-
-
-PROVIDER_FILE_NAME="$(PROVIDER_NAME)_v$(PROVIDER_VERSION)"
+PROVIDER_VERSION?="v1.1.0"
+PROVIDER_FILE_NAME="$(PROVIDER_NAME)_$(PROVIDER_VERSION)"
 
 default: install
 
 build:
-	go build -o $(PROVIDER_FILE_NAME)
-	chmod +x $(PROVIDER_FILE_NAME)
+	PROVIDER_FILE_NAME="$(PROVIDER_NAME)_$(PROVIDER_VERSION)"
+	mkdir -p $(OUTPUT)
+	go build -o "$(OUTPUT)/$(PROVIDER_FILE_NAME)"
+	chmod +x "$(OUTPUT)/$(PROVIDER_FILE_NAME)"
 
 install: fmtcheck
 	go install

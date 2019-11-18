@@ -11,9 +11,9 @@ jobs:
                   command: apk add make git
             - run:
                   name: Build binary
-                  command: make build
+                  command: export PROVIDER_VERSION="${CIRCLE_TAG:-unknown}" && make build
             - store_artifacts:
-                  path: ./terraform-provider-secret_v1.1.0
+                  path: ./dist
     release:
         docker:
             - image: circleci/golang:1.9
@@ -24,9 +24,7 @@ jobs:
                   name: "Publish Release on GitHub"
                   command: |
                     go get -u github.com/tcnksm/ghr
-                    VERSION=${CIRCLE_TAG}
-                    echo "VERSION=${VERSION}"
-                    ghr -t ${GITHUB_TOKEN} -u ${CIRCLE_PROJECT_USERNAME} -r ${CIRCLE_PROJECT_REPONAME} -c ${CIRCLE_SHA1} -delete ${VERSION} ./artifacts/
+                    ghr -t ${GITHUB_TOKEN} -u ${CIRCLE_PROJECT_USERNAME} -r ${CIRCLE_PROJECT_REPONAME} -c ${CIRCLE_SHA1} -delete ${CIRCLE_TAG} ./artifacts/
 
 workflows:
     version: 2
