@@ -11,7 +11,7 @@ jobs:
                   command: apk add make git
             - run:
                   name: Build binary
-                  command: export PROVIDER_VERSION="${CIRCLE_TAG:-unknown}" && make build
+                  command: export PROVIDER_VERSION="${CIRCLE_TAG:-unknown}" && go get -u github.com/mitchellh/gox && make build
             - persist_to_workspace:
                   root: ~/project
                   paths:
@@ -26,7 +26,6 @@ jobs:
                   name: "Publish Release on GitHub"
                   command: |
                     go get -u github.com/tcnksm/ghr
-                    go get -u github.com/mitchellh/gox
                     ls -la ./dist/
                     ghr -t ${GITHUB_TOKEN} -u ${CIRCLE_PROJECT_USERNAME} -r ${CIRCLE_PROJECT_REPONAME} -c ${CIRCLE_SHA1} -delete ${CIRCLE_TAG} ./dist/
 
