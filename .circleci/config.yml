@@ -1,3 +1,4 @@
+---
 version: 2
 jobs:
     build:
@@ -6,43 +7,41 @@ jobs:
         steps:
             - checkout
             - run:
-                name: Install packages
-                command: apk add make git
-
+                  name: Install packages
+                  command: apk add make gi
             - run:
-                name: Build binary
-                command: make build
-
+                  name: Build binary
+                  command: make build
             - store_artifacts:
-                path: ./terraform-provider-secret_v1.1.0
+                  path: ./terraform-provider-secret_v1.1.0
     release:
         docker:
-          - image: circleci/golang:1.9
+            - image: circleci/golang:1.9
         steps:
-          - attach_workspace:
-              at: ./artifacts
-          - run:
-              name: "Publish Release on GitHub"
-              command: |
-                go get -u github.com/tcnksm/ghr
-                VERSION=${CIRCLE_TAG}
-                echo "VERSION=${VERSION}"
-                ghr -t ${GITHUB_TOKEN} -u ${CIRCLE_PROJECT_USERNAME} -r ${CIRCLE_PROJECT_REPONAME} -c ${CIRCLE_SHA1} -delete ${VERSION} ./artifacts/
+            - attach_workspace:
+                  at: ./artifacts
+            - run:
+                  name: "Publish Release on GitHub"
+                  command: |
+                    go get -u github.com/tcnksm/ghr
+                    VERSION=${CIRCLE_TAG}
+                    echo "VERSION=${VERSION}"
+                    ghr -t ${GITHUB_TOKEN} -u ${CIRCLE_PROJECT_USERNAME} -r ${CIRCLE_PROJECT_REPONAME} -c ${CIRCLE_SHA1} -delete ${VERSION} ./artifacts/
 
 workflows:
     version: 2
     main:
         jobs:
-            - build
-              filters:
-                tags:
-                  only: /v[0-9]+(\.[0-9]+)*(-.*)*/            
-            - release
-              # Only run this job on git tag pushes
-              requires:
-                - build
-              filters:
-                branches:
-                  ignore: /.*/
-                tags:
-                  only: /v[0-9]+(\.[0-9]+)*(-.*)*/
+            - build:
+                  filters:
+                      tags:
+                          only: /v[0-9]+(\.[0-9]+)*(-.*)*/
+            - release:
+                  # Only run this job on git tag pushes
+                  requires:
+                      - build
+                  filters:
+                      branches:
+                          ignore: /.*/
+                      tags:
+                          only: /v[0-9]+(\.[0-9]+)*(-.*)*/
