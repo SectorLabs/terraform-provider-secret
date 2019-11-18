@@ -10,12 +10,15 @@ PROVIDER_FILE_NAME="$(PROVIDER_NAME)_$(PROVIDER_VERSION)"
 
 default: install
 
+clean:
+	rm -rf $(OUTPUT)
+
 .PHONY:
-build:
+build: clean
 	PROVIDER_FILE_NAME="$(PROVIDER_NAME)_$(PROVIDER_VERSION)"
 	gox -os="linux darwin windows" -arch="amd64" -output="$(OUTPUT)/$(PROVIDER_NAME)_$(PROVIDER_VERSION)_{{.OS}}_{{.Arch}}/$(PROVIDER_NAME)_$(PROVIDER_VERSION)"
 	chmod -R +x $(OUTPUT)/*
-	find dist -depth 1 -type d -exec  tar czf $(basename {}.tar.gz) -C $(basename {}) . \;
+	find dist -mindepth 1 -type d -exec  tar czf $(basename {}.tar.gz) -C $(basename {}) . \;
 
 install: fmtcheck
 	go install
