@@ -15,7 +15,7 @@ jobs:
             - persist_to_workspace:
                   root: ~/project
                   paths:
-                      - dist/*.tar.gz
+                      - dist/*
     release:
         docker:
             - image: circleci/golang:1.9

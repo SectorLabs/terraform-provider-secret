@@ -2,7 +2,8 @@ TEST?=$$(go list ./... |grep -v 'vendor')
 GOFMT_FILES?=$$(find . -name '*.go' |grep -v vendor)
 WEBSITE_REPO=github.com/hashicorp/terraform-website
 PKG_NAME=null
-OUTPUT=./dist
+BUILD_OUTPUT=./build
+DIST_OUTPUT=./dist
 
 PROVIDER_NAME=terraform-provider-secret
 PROVIDER_VERSION?=v1.1.0
@@ -11,14 +12,22 @@ PROVIDER_FILE_NAME="$(PROVIDER_NAME)_$(PROVIDER_VERSION)"
 default: install
 
 clean:
-	rm -rf $(OUTPUT)
+	rm -rf $(BUILD_OUTPUT) $(DIST_OUTPUT)
+
+t:
+	for number in 1 2 3 4 ; do \
+    	echo $$number ; \
+	done
 
 .PHONY:
 build: clean
 	PROVIDER_FILE_NAME="$(PROVIDER_NAME)_$(PROVIDER_VERSION)"
-	gox -os="linux darwin windows" -arch="amd64" -output="$(OUTPUT)/$(PROVIDER_NAME)_$(PROVIDER_VERSION)_{{.OS}}_{{.Arch}}/$(PROVIDER_NAME)_$(PROVIDER_VERSION)"
-	chmod -R +x $(OUTPUT)/*
-	find dist -mindepth 1 -type d -exec echo "tar czf $(basename {}).tar.gz -C $(basename {}) . " \;
+	gox -os="linux darwin windows" -arch="amd64" -output="$(BUILD_OUTPUT)/$(PROVIDER_NAME)_$(PROVIDER_VERSION)_{{.OS}}_{{.Arch}}/$(PROVIDER_NAME)_$(PROVIDER_VERSION)"
+	chmod -R +x $(BUILD_OUTPUT)/*
+	mkdir -p $(DIST_OUTPUT)
+	for arch in $$(ls $(BUILD_OUTPUT)); do  \
+		tar czvf $(DIST_OUTPUT)/$$arch.tar.gz -C $(BUILD_OUTPUT)/$$arch . ; \
+	done
 
 install: fmtcheck
 	go install
