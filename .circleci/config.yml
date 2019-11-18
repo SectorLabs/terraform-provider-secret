@@ -8,7 +8,7 @@ jobs:
             - checkout
             - run:
                   name: Install packages
-                  command: apk add make gi
+                  command: apk add make git
             - run:
                   name: Build binary
                   command: make build
