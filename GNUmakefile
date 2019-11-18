@@ -4,17 +4,18 @@ WEBSITE_REPO=github.com/hashicorp/terraform-website
 PKG_NAME=null
 OUTPUT=./dist
 
-PROVIDER_NAME="terraform-provider-secret"
-PROVIDER_VERSION?="v1.1.0"
+PROVIDER_NAME=terraform-provider-secret
+PROVIDER_VERSION?=v1.1.0
 PROVIDER_FILE_NAME="$(PROVIDER_NAME)_$(PROVIDER_VERSION)"
 
 default: install
 
+.PHONY:
 build:
 	PROVIDER_FILE_NAME="$(PROVIDER_NAME)_$(PROVIDER_VERSION)"
-	mkdir -p $(OUTPUT)
-	go build -o "$(OUTPUT)/$(PROVIDER_FILE_NAME)"
-	chmod +x "$(OUTPUT)/$(PROVIDER_FILE_NAME)"
+	gox -os="linux darwin windows" -arch="amd64" -output="$(OUTPUT)/$(PROVIDER_NAME)_$(PROVIDER_VERSION)_{{.OS}}_{{.Arch}}/$(PROVIDER_NAME)_$(PROVIDER_VERSION)"
+	chmod -R +x $(OUTPUT)/*
+	find dist -depth 1 -type d -exec  tar czf $(basename {}.tar.gz) -C $(basename {}) . \;
 
 install: fmtcheck
 	go install
