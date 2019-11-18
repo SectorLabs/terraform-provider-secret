@@ -14,11 +14,6 @@ default: install
 clean:
 	rm -rf $(BUILD_OUTPUT) $(DIST_OUTPUT)
 
-t:
-	for number in 1 2 3 4 ; do \
-    	echo $$number ; \
-	done
-
 .PHONY:
 build: clean
 	PROVIDER_FILE_NAME="$(PROVIDER_NAME)_$(PROVIDER_VERSION)"

@@ -26,7 +26,6 @@ jobs:
                   name: "Publish Release on GitHub"
                   command: |
                     go get -u github.com/tcnksm/ghr
-                    ls -la ./dist/
                     ghr -t ${GITHUB_TOKEN} -u ${CIRCLE_PROJECT_USERNAME} -r ${CIRCLE_PROJECT_REPONAME} -c ${CIRCLE_SHA1} -delete ${CIRCLE_TAG} ./dist/
 
 workflows:
