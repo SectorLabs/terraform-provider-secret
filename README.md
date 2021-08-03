@@ -13,17 +13,17 @@ into the state file?
 When using a remote state file, the state is automatically distributed with
 the new secret which makes key rotation easier.
 
-This is only a better solution than storing secrets in Git. Look at adopting
+This is a better solution than storing secrets in Git. Look at adopting
 Hashicorp Vault in the longer term.
 
 ## Requirements
 
--	[Terraform](https://www.terraform.io/downloads.html) 0.10.x
--	[Go](https://golang.org/doc/install) 1.8 (to build the provider plugin)
+-	[Terraform](https://www.terraform.io/downloads.html) 0.12.x
+-	[Go](https://golang.org/doc/install) 1.11 (to build the provider plugin)
 
-## How to install
+## Installation
 
-### Building from source
+### Install via `go get`
 
 1. Follow these [instructions](https://golang.org/doc/install) to setup a Golang development environment.
 2. Use `go get` to pull down this repository and compile the binary:
@@ -32,7 +32,9 @@ Hashicorp Vault in the longer term.
 go get -u -v github.com/tweag/terraform-provider-secret
 ```
 
-### Using Nix
+The binary will be placed in `$GOPATH/bin` or `$HOME/go/bin` if `$GOPATH` is not set.
+
+### Install via Nix
 
 If you are lucky enough to use [Nix](https://builtwithnix.org), it's
 already part of the full terraform distribution:
@@ -41,25 +43,33 @@ already part of the full terraform distribution:
 nix-env -iA nixpkgs.terraform-full
 ```
 
-## Building The Provider
+### Compile from source
 
-Clone repository to: `$GOPATH/src/github.com/tweag/terraform-provider-secret`
+Clone the repository:
 
 ```sh
-$ git clone git@github.com:tweag/terraform-provider-secret $GOPATH/src/github.com/tweag/terraform-provider-secret
+$ git clone git@github.com:tweag/terraform-provider-secret
 ```
 
 Enter the provider directory and build the provider
 
 ```sh
-$ cd $GOPATH/src/github.com/tweag/terraform-provider-secret
-$ make build
+$ cd terraform-provider-secret
+$ GO111MODULE=on go build
 ```
 
-Using the provider
-----------------------
+## Usage
 
-### `secret_resource`
+### Provider installation
+
+* Copy the `terraform-provider-secret` binary to `~/.terraform.d/plugins` (recommended) or any location specified by [Terraform documentation](https://www.terraform.io/docs/extend/how-terraform-works.html#plugin-locations).
+
+* Add the line `provider "secret" {}` line to `main.tf`
+To prevent warnings, you may optionally add a version lock to the provider entry in the form of `provider "secret" { version = "~> X.Y"}` where `X.Y` is the version you wish to pin. Note that when the binary is built no version suffix is specified; you will need to manually add `_vX.Y` to the provider binary unless you directly use release from Github.
+
+* Run `terraform init`.
+
+### Using `secret_resource`
 
 **Schema**:
 
@@ -79,10 +89,15 @@ resource "secret_resource" "datadog_api_key" {
 ```
 
 To populate the secret, run
-```
+```sh
 terraform import secret_resource.datadog_api_key TOKEN
 ```
 where `TOKEN` is the value of the token.
+
+Or to import from a file:
+```sh
+terraform import secret_resource.datadog_api_key "$(< ./datadog-api-key)"
+```
 
 Once imported, the secret can be accessed using
 `secret_resource.datadog_api_key.value`
@@ -92,6 +107,26 @@ Once imported, the secret can be accessed using
 ```sh
 terraform state rm secret_resource.datadog_api_key
 terraform import secret_resource.datadog_api_key NEW_TOKEN
+```
+
+### Importing binary secrets
+
+The secret values can only contain UTF-8 encoded strings. If the secret is a
+binary key, a workaround it to encode it first as base64, then use the
+terraform `base64decode()` function on usage.
+
+Eg:
+
+```sh
+terraform import secret_resource.my_binary_key "$(base64 ./binary-key)"
+```
+
+Then on usage:
+
+```tf
+resource "other_resource" "xxx" {
+  secret = base64decode(secret_resource.my_binary_key.value)
+}
 ```
 
 ## Developing the Provider
@@ -120,6 +155,11 @@ In order to run the full suite of Acceptance tests, run `make testacc`.
 ```sh
 $ make testacc
 ```
+
+## Related projects
+
+* https://github.com/carlpett/terraform-provider-sops - allows to decode
+  in-repo secrets on the fly.
 
 ## License
 
